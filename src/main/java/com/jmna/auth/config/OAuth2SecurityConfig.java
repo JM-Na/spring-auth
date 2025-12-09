@@ -15,7 +15,6 @@ import org.springframework.security.config.oauth2.client.CommonOAuth2Provider;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -30,8 +29,6 @@ public class OAuth2SecurityConfig {
     SecurityFilterChain oAuth2SecurityFilterChain(HttpSecurity http,
                                                   CustomOAuth2UserService customOAuth2UserService,
                                                   CustomOAuth2LoginSuccessHandler oAuth2LoginSuccessHandler) throws Exception {
-        var authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
-
         http
                 .securityMatcher("/oauth2/**", "/login/oauth2/**")
                 .authorizeHttpRequests(auth -> auth

@@ -38,7 +38,7 @@ public class AuthController {
     // 로그아웃
     @GetMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request) {
-        tokenService.deleteUserToken(request);
+        userService.logoutUser(request);
         return ResponseEntity.ok("로그아웃 성공");
     }
 

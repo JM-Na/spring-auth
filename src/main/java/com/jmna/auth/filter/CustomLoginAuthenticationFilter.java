@@ -42,7 +42,6 @@ public class CustomLoginAuthenticationFilter extends UsernamePasswordAuthenticat
             if (username == null || password == null) {
                 throw new BadCredentialsException("Username or Password missing");
             }
-            
             // Body에서 얻은 정보로 UsernamePasswordAuthenticationToken 생성
             UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(username, password);
             setDetails(request, authRequest);
@@ -51,6 +50,7 @@ public class CustomLoginAuthenticationFilter extends UsernamePasswordAuthenticat
             return this.getAuthenticationManager().authenticate(authRequest);
 
         } catch (IOException e) {
+            System.out.println("e = " + e);
             throw new AuthenticationServiceException("Invalid login request format");
         }
     }

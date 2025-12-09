@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity(name = "member")
@@ -33,13 +34,13 @@ public class User {
 
     @Column
     @ElementCollection(fetch = FetchType.EAGER)
-    private List<Roles> roles;
+    private List<Roles> roles = new ArrayList<>();
 
     @Column
     private boolean isEnabled;
 
     @JoinColumn(name = "refresh_token_id")
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private RefreshToken refreshToken;
 
     @Builder
@@ -47,7 +48,7 @@ public class User {
         this.username = username;
         this.password = password;
         this.provider = provider;
-        this.roles = roles;
+        this.roles = new ArrayList<>(roles);
         this.isEnabled = true;
     }
 

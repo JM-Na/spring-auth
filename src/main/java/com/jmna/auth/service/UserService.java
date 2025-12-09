@@ -1,9 +1,7 @@
 package com.jmna.auth.service;
 
-import com.jmna.auth.dto.InfoUpdateRequest;
-import com.jmna.auth.dto.PasswordChangeRequest;
-import com.jmna.auth.dto.PasswordCheckRequest;
-import com.jmna.auth.dto.SignupRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jmna.auth.dto.*;
 import com.jmna.auth.entity.RefreshToken;
 import com.jmna.auth.entity.Roles;
 import com.jmna.auth.entity.User;
@@ -21,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +34,8 @@ public class UserService {
     public void registerUser(SignupRequest dto) {
         if (userRepository.findByUsername(dto.getUsername()).isPresent())
             throw new IllegalArgumentException("동일한 사용자명이 이미 존재합니다.");
+        if (Objects.equals(dto.getUsername(), "") || Objects.equals(dto.getPassword(), ""))
+            throw new IllegalArgumentException("사용자명 또는 비밀번호가 입력되지 않았습니다.");
         User user = User.builder()
                 .username(dto.getUsername())
                 .password(passwordEncoder.encode(dto.getPassword()))
@@ -49,7 +50,6 @@ public class UserService {
         User user = userRepository.findByUsername(username).orElseThrow();
         if (passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             userRepository.delete(user);
-            tokenService.deleteUserToken(request);
         } else
             throw new BadCredentialsException("잘못된 정보입니다. 다시 입력해주세요.");
     }
@@ -123,20 +123,28 @@ public class UserService {
         }
     }
 
+    public void logoutUser(HttpServletRequest request) {
+        String username = tokenService.getTokenUsername(request);
+        User user = userRepository.findByUsername(username).orElseThrow();
+        tokenService.deleteUserToken(user);
+    }
+
     // 응답 JSON 생성
     private void setLoginResponse(HttpServletResponse response, String message,
                                   String accessToken, String refreshToken, String provider) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json;charset=UTF-8");
 
-        String result = String.format("{" +
-                        "\"message\":\"%s\", " +
-                        "\"provider\":\"%s\", " +
-                        "\"accessToken\":\"%s\", " +
-                        "\"refreshToken\":\"%s\"}"
-                , message, provider, accessToken, refreshToken);
+        LoginResponse loginResponse = LoginResponse.builder()
+                .message(message)
+                .provider(provider)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
 
-        response.getWriter().write(result);
+        response.getWriter().write(objectMapper.writeValueAsString(loginResponse));
     }
 
     //  RefreshToken 저장 (DB/TODO Redis)

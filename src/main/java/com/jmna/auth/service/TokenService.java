@@ -23,21 +23,17 @@ public class TokenService {
     // 유저 이름으로 토큰 검색
     public RefreshToken findUserRefreshToken(String username) {
         User user = userRepository.findByUsername(username).orElseThrow();
-        return tokenRepository.findByUserId(user.getId()).orElseThrow();
+        return user.getRefreshToken();
     }
 
     // RefreshToken 검증
     public Boolean verifyRefreshToken(String tokenValue) {
-
         String username = tokenProvider.getUsername(tokenValue);
         RefreshToken refreshToken = findUserRefreshToken(username);
         return refreshToken.getTokenValue().equals(tokenValue);
     }
 
-    // RefreshToken 삭제
-    public void deleteRefreshToken(RefreshToken refreshToken) {
-        tokenRepository.delete(refreshToken);
-    }
+
 
     public String getTokenUsername(HttpServletRequest request) {
         String authorization = request.getHeader("Authorization");
@@ -50,10 +46,15 @@ public class TokenService {
     }
 
     // 로그아웃 시 해당 유저의 Refresh Token을 DB에서 삭제
-    public void deleteUserToken(HttpServletRequest request) {
-        String username = getTokenUsername(request);
-        RefreshToken refreshToken = findUserRefreshToken(username);
+    public void deleteUserToken(User user) {
+        RefreshToken refreshToken = user.getRefreshToken();
+        user.setToken(null);
         deleteRefreshToken(refreshToken);
+    }
+
+    // RefreshToken 삭제
+    private void deleteRefreshToken(RefreshToken refreshToken) {
+        tokenRepository.delete(refreshToken);
     }
 
     // Refresh Token으로 Access Token 갱신
