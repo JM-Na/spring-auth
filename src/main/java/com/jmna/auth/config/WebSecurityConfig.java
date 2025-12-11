@@ -50,7 +50,6 @@ public class WebSecurityConfig {
     @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http,
                                                           CustomLoginAuthenticationFilter loginFilter) throws Exception {
-
         http
                 .authorizeHttpRequests(
                         auth -> auth
@@ -70,6 +69,7 @@ public class WebSecurityConfig {
         String defaultId = "bcrypt";
 
         Map<String, PasswordEncoder> encoderMap = new HashMap<>();
+
         encoderMap.put("bcrypt", new BCryptPasswordEncoder());
         encoderMap.put("scrypt", new SCryptPasswordEncoder(1 << 14, 8, 1, 32 ,16));
         encoderMap.put("argon2", new Argon2PasswordEncoder(16, 32, 1, 4096, 3));

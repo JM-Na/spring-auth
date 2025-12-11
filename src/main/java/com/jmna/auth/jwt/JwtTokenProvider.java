@@ -2,6 +2,7 @@ package com.jmna.auth.jwt;
 
 import com.jmna.auth.userdetails.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,16 +21,14 @@ public class JwtTokenProvider {
     private final JwtDecoder jwtDecoder;
 
     // AccessToken 만료 -> 15분
-    private final long ACCESS_TOKEN_EXPIRE_MIN = 15;
+    @Value("${expire.access}")
+    private Long ACCESS_TOKEN_EXPIRE_MIN;
     // RefreshToken 만료 -> 7일
-    private final long REFRESH_TOKEN_EXPIRE_DAY = 7;
+    @Value("${expire.refresh}")
+    private Long REFRESH_TOKEN_EXPIRE_DAY;
 
 
-    /**
-     * ============================================
-     * Access Token 생성
-     * =============================================
-     */
+    // Access Token 생성
     public String generateAccessToken(String username) {
         Instant now = Instant.now();
 
@@ -44,11 +43,7 @@ public class JwtTokenProvider {
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
-    /**
-     * ============================================
-     * Refresh Token 생성
-     * =============================================
-     */
+    // Refresh Token 생성
     public String generateRefreshToken(String username) {
         Instant now = Instant.now();
 
@@ -63,38 +58,22 @@ public class JwtTokenProvider {
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
-    /**
-     * ============================================
-     * JWT 토큰 검증
-     * =============================================
-     */
+    // JWT 토큰 검증
     public Jwt decode(String token) {
         return jwtDecoder.decode(token);
     }
 
-    /**
-     * ============================================
-     * 토론에서 username 추출
-     * =============================================
-     */
+    // 토론에서 username 추출
     public String getUsername(String token) {
         return jwtDecoder.decode(token).getSubject();
     }
 
-    /**
-     * ============================================
-     * claim 꺼내기
-     * =============================================
-     */
+    // claim 꺼내기
     public Map<String, Object> getClaims(String token) {
         return jwtDecoder.decode(token).getClaims();
     }
 
-    /**
-     * ============================================
-     * Access Token 유효성 검사
-     * =============================================
-     */
+    // Access Token 유효성 검사
     public boolean verify(String token) {
         try {
             // 1. 서명, 유효 기간 검증

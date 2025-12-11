@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.NoSuchElementException;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -36,20 +37,20 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 class TokenServiceTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    MockMvc mockMvc;
     @Autowired
     EntityManager em;
 
     @Autowired
-    private UserService userService;
+    UserService userService;
     @Autowired
-    private TokenService tokenService;
+    TokenService tokenService;
     @Autowired
-    private UserRepository userRepository;
+    UserRepository userRepository;
     @Autowired
-    private RefreshTokenRepository tokenRepository;
+    RefreshTokenRepository tokenRepository;
     @Autowired
-    private JwtTokenProvider tokenProvider;
+    JwtTokenProvider tokenProvider;
 
     String accessToken;
     String refreshToken;
@@ -68,6 +69,7 @@ class TokenServiceTest {
 
         MvcResult mvcResult = mockMvc.perform(
                 post("/auth/login")
+                        .servletPath("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(req))
         ).andReturn();
