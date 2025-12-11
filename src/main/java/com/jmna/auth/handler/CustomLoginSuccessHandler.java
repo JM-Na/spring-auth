@@ -22,7 +22,7 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
 
         String username = authentication.getName();
 
-        // 유저를 로그인 처리할 시, Access Token/Refresh Token을 생성하고 저장
+        // 유저를 로그인 처리할 시, Access Token, Refresh Token을 생성하고 저장
         userService.loginUser(username, response);
     }
 }

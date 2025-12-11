@@ -25,7 +25,7 @@ public class AuthController {
     // 회원가입
     @PostMapping("/signup")
     public ResponseEntity<?> signup(HttpServletRequest request, @RequestBody SignupRequest dto) {
-        log.info("{} {} 회원가입 요청", request.getMethod(), request.getServletPath());
+        log.info("{} 회원가입 요청이 발생했습니다.", request.getServletPath());
         try {
             userService.registerUser(dto);
             return ResponseEntity.ok("회원가입 완료");

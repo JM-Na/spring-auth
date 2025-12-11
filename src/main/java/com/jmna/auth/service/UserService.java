@@ -32,10 +32,14 @@ public class UserService {
     private final JwtTokenProvider tokenProvider;
 
     public void registerUser(SignupRequest dto) {
-        if (userRepository.findByUsername(dto.getUsername()).isPresent())
+        if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
+            log.error("회원가입 오류: 동일한 사용자명이 이미 존재합니다.");
             throw new IllegalArgumentException("동일한 사용자명이 이미 존재합니다.");
-        if (Objects.equals(dto.getUsername(), "") || Objects.equals(dto.getPassword(), ""))
+        }
+        if (Objects.equals(dto.getUsername(), "") || Objects.equals(dto.getPassword(), "")) {
+            log.error("회원가입 오류: 사용자명 또는 비밀번호가 입력되지 않았습니다.");
             throw new IllegalArgumentException("사용자명 또는 비밀번호가 입력되지 않았습니다.");
+        }
         User user = User.builder()
                 .username(dto.getUsername())
                 .password(passwordEncoder.encode(dto.getPassword()))
@@ -43,6 +47,7 @@ public class UserService {
                 .roles(List.of(Roles.ROLE_USER))
                 .build();
         userRepository.save(user);
+        log.info("회원가입 성공, 사용자명: {}", dto.getUsername());
     }
 
     public void deleteUser(HttpServletRequest request, PasswordCheckRequest dto) {
@@ -50,27 +55,36 @@ public class UserService {
         User user = userRepository.findByUsername(username).orElseThrow();
         if (passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             userRepository.delete(user);
-        } else
+            log.info("회원탈퇴 성공, 사용자명: {}", username);
+        } else {
+            log.error("회원탈퇴 오류: 비밀번호 확인에 실패했습니다.");
             throw new BadCredentialsException("잘못된 정보입니다. 다시 입력해주세요.");
+        }
     }
 
     public void changePassword(HttpServletRequest request, PasswordChangeRequest dto) {
         String username = tokenService.getTokenUsername(request);
         User user = userRepository.findByUsername(username).orElseThrow();
         if (passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
-            user.updatePassword(dto.getNewPassword());
+            user.updatePassword(passwordEncoder.encode(dto.getNewPassword()));
             userRepository.save(user);
-        } else
+            log.info("비밀번호 변경 성공, 사용자명: {}", username);
+        } else {
+            log.error("비밀번호 변경 오류: 비밀번호 확인에 실패했습니다.");
             throw new BadCredentialsException("잘못된 정보입니다. 다시 입력해주세요.");
+        }
     }
 
     public void changeUserInfo(HttpServletRequest request, InfoUpdateRequest dto) {
         String username = tokenService.getTokenUsername(request);
         User user = userRepository.findByUsername(username).orElseThrow();
-        if (userRepository.findByUsername(dto.getUsername()).isPresent())
+        if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
+            log.error("사용자 정보 변경 오류: 동일한 사용자명이 이미 존재합니다.");
             throw new IllegalArgumentException("동일한 사용자명이 이미 존재합니다.");
+        }
         user.updateDetails(dto);
         userRepository.save(user);
+        log.info("사용자 정보 변경 성공: {}", user.getUsername());
     }
 
     public Boolean checkPassword(HttpServletRequest request, PasswordCheckRequest dto) {
@@ -127,6 +141,7 @@ public class UserService {
         String username = tokenService.getTokenUsername(request);
         User user = userRepository.findByUsername(username).orElseThrow();
         tokenService.deleteUserToken(user);
+        log.info("로그아웃 성공: {}", username);
     }
 
     // 응답 JSON 생성
