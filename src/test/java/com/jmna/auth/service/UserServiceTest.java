@@ -150,7 +150,6 @@ class UserServiceTest {
             userService.changePassword(mockHttpServletRequest, dto);
             User user = userRepository.findByUsername("test").orElseThrow();
             String password = user.getPassword();
-
             Assertions.assertThat(passwordEncoder.matches("test1", password)).isTrue();
         }
 

@@ -13,10 +13,16 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 @RequiredArgsConstructor
@@ -61,7 +67,14 @@ public class WebSecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        String defaultId = "bcrypt";
+
+        Map<String, PasswordEncoder> encoderMap = new HashMap<>();
+        encoderMap.put("bcrypt", new BCryptPasswordEncoder());
+        encoderMap.put("scrypt", new SCryptPasswordEncoder(1 << 14, 8, 1, 32 ,16));
+        encoderMap.put("argon2", new Argon2PasswordEncoder(16, 32, 1, 4096, 3));
+
+        return new DelegatingPasswordEncoder(defaultId,encoderMap);
     }
 
 }
