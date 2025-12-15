@@ -1,5 +1,6 @@
 package com.jmna.auth.jwt;
 
+import com.jmna.auth.exception.InvalidJWTException;
 import com.jmna.auth.userdetails.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -83,7 +84,7 @@ public class JwtTokenProvider {
             if (!type.equals("access"))
                 return false;
         } catch (JwtException e) {
-            throw new RuntimeException(e);
+            throw new InvalidJWTException();
         }
         return true;
     }

@@ -53,7 +53,7 @@ public class CustomJwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             if (tokenProvider.verify(jwt)) {
-                log.info("JWT 인증에 성공했습니다.");
+                log.info("Access Token 인증 성공");
                 Authentication authentication = tokenProvider.getAuthentication(jwt);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }

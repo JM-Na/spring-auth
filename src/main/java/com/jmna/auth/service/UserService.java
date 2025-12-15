@@ -5,6 +5,7 @@ import com.jmna.auth.dto.*;
 import com.jmna.auth.entity.RefreshToken;
 import com.jmna.auth.entity.Roles;
 import com.jmna.auth.entity.User;
+import com.jmna.auth.exception.InvalidUsernameException;
 import com.jmna.auth.jwt.JwtTokenProvider;
 import com.jmna.auth.oauth.CustomOAuth2User;
 import com.jmna.auth.repository.UserRepository;
@@ -80,7 +81,7 @@ public class UserService {
         User user = userRepository.findByUsername(username).orElseThrow();
         if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
             log.error("사용자 정보 변경 오류: 동일한 사용자명이 이미 존재합니다.");
-            throw new IllegalArgumentException("동일한 사용자명이 이미 존재합니다.");
+            throw new InvalidUsernameException();
         }
         user.updateDetails(dto);
         userRepository.save(user);
@@ -152,7 +153,7 @@ public class UserService {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json;charset=UTF-8");
 
-        LoginResponse loginResponse = LoginResponse.builder()
+        CommonLoginResponse loginResponse = CommonLoginResponse.builder()
                 .message(message)
                 .provider(provider)
                 .accessToken(accessToken)
