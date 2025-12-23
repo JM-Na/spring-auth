@@ -76,7 +76,7 @@ public class AuthController {
     public CommonResponse check(HttpServletRequest request, @RequestBody PasswordCheckRequest dto) {
         Boolean matches = userService.checkPassword(request, dto);
         return CommonResponse.builder()
-                .message("비밀번호 검증 결과: " +  matches.toString())
+                .message("비밀번호 검증 결과: " + matches.toString())
                 .build();
     }
 }

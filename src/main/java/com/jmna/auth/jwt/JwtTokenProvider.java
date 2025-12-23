@@ -1,6 +1,7 @@
 package com.jmna.auth.jwt;
 
 import com.jmna.auth.exception.InvalidJWTException;
+import com.jmna.auth.userdetails.CustomUserDetails;
 import com.jmna.auth.userdetails.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -91,7 +92,7 @@ public class JwtTokenProvider {
 
     public Authentication getAuthentication(String token) {
         String username = getUsername(token);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(username);
         return new UsernamePasswordAuthenticationToken(
                 userDetails,
                 null,
