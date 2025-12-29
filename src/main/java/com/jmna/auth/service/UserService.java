@@ -9,6 +9,7 @@ import com.jmna.auth.exception.InvalidUsernameException;
 import com.jmna.auth.jwt.JwtTokenProvider;
 import com.jmna.auth.oauth.CustomOAuth2User;
 import com.jmna.auth.repository.UserRepository;
+import com.jmna.auth.userdetails.CustomUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -51,34 +52,31 @@ public class UserService {
         log.info("회원가입 성공, 사용자명: {}", dto.getUsername());
     }
 
-    public void deleteUser(HttpServletRequest request, PasswordCheckRequest dto) {
-        String username = tokenService.getTokenUsername(request);
-        User user = userRepository.findByUsername(username).orElseThrow();
+    public void deleteUser(CustomUserDetails userDetails, PasswordCheckRequest dto) {
+        User user = userDetails.getUser();
         if (passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             userRepository.delete(user);
-            log.info("회원탈퇴 성공, 사용자명: {}", username);
+            log.info("회원탈퇴 성공, 사용자명: {}", user.getUsername());
         } else {
             log.error("회원탈퇴 오류: 비밀번호 확인에 실패했습니다.");
             throw new BadCredentialsException("잘못된 정보입니다. 다시 입력해주세요.");
         }
     }
 
-    public void changePassword(HttpServletRequest request, PasswordChangeRequest dto) {
-        String username = tokenService.getTokenUsername(request);
-        User user = userRepository.findByUsername(username).orElseThrow();
+    public void changePassword(CustomUserDetails userDetails, PasswordChangeRequest dto) {
+        User user = userDetails.getUser();
         if (passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
             user.updatePassword(passwordEncoder.encode(dto.getNewPassword()));
             userRepository.save(user);
-            log.info("비밀번호 변경 성공, 사용자명: {}", username);
+            log.info("비밀번호 변경 성공, 사용자명: {}", user.getUsername());
         } else {
             log.error("비밀번호 변경 오류: 비밀번호 확인에 실패했습니다.");
             throw new BadCredentialsException("잘못된 정보입니다. 다시 입력해주세요.");
         }
     }
 
-    public void changeUserInfo(HttpServletRequest request, InfoUpdateRequest dto) {
-        String username = tokenService.getTokenUsername(request);
-        User user = userRepository.findByUsername(username).orElseThrow();
+    public void changeUserInfo(CustomUserDetails userDetails, InfoUpdateRequest dto) {
+        User user = userDetails.getUser();
         if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
             log.error("사용자 정보 변경 오류: 동일한 사용자명이 이미 존재합니다.");
             throw new InvalidUsernameException();
@@ -88,9 +86,8 @@ public class UserService {
         log.info("사용자 정보 변경 성공: {}", user.getUsername());
     }
 
-    public Boolean checkPassword(HttpServletRequest request, PasswordCheckRequest dto) {
-        String username = tokenService.getTokenUsername(request);
-        User user = userRepository.findByUsername(username).orElseThrow();
+    public Boolean checkPassword(CustomUserDetails userDetails, PasswordCheckRequest dto) {
+        User user = userDetails.getUser();
         return passwordEncoder.matches(dto.getPassword(), user.getPassword());
     }
 
@@ -138,11 +135,10 @@ public class UserService {
         }
     }
 
-    public void logoutUser(HttpServletRequest request) {
-        String username = tokenService.getTokenUsername(request);
-        User user = userRepository.findByUsername(username).orElseThrow();
+    public void logoutUser(CustomUserDetails userDetails) {
+        User user = userDetails.getUser();
         tokenService.deleteUserToken(user);
-        log.info("로그아웃 성공: {}", username);
+        log.info("로그아웃 성공: {}", user.getUsername());
     }
 
     // 응답 JSON 생성

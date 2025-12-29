@@ -1,8 +1,8 @@
 package com.jmna.auth.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jmna.auth.dto.CommonLoginResponse;
 import com.jmna.auth.dto.LoginRequest;
-import com.jmna.auth.dto.LoginResponse;
 import com.jmna.auth.dto.SignupRequest;
 import com.jmna.auth.entity.RefreshToken;
 import com.jmna.auth.entity.User;
@@ -25,7 +25,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.NoSuchElementException;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -76,7 +75,7 @@ class TokenServiceTest {
 
         MockHttpServletResponse response = mvcResult.getResponse();
 
-        LoginResponse loginResponse = new ObjectMapper().readValue(response.getContentAsString(), LoginResponse.class);
+        CommonLoginResponse loginResponse = new ObjectMapper().readValue(response.getContentAsString(), CommonLoginResponse.class);
 
         accessToken = loginResponse.getAccessToken();
         refreshToken = loginResponse.getRefreshToken();

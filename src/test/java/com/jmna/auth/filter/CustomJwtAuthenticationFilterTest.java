@@ -1,8 +1,8 @@
 package com.jmna.auth.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jmna.auth.dto.CommonLoginResponse;
 import com.jmna.auth.dto.LoginRequest;
-import com.jmna.auth.dto.LoginResponse;
 import com.jmna.auth.dto.SignupRequest;
 import com.jmna.auth.jwt.JwtTokenProvider;
 import com.jmna.auth.service.UserService;
@@ -112,7 +112,7 @@ class CustomJwtAuthenticationFilterTest {
         ).andReturn();
 
         MockHttpServletResponse response = mvcResult.getResponse();
-        LoginResponse loginResponse = new ObjectMapper().readValue(response.getContentAsString(), LoginResponse.class);
+        CommonLoginResponse loginResponse = new ObjectMapper().readValue(response.getContentAsString(), CommonLoginResponse.class);
         String accessToken = loginResponse.getAccessToken();
 
         // JWT를 포함한 요청 생성

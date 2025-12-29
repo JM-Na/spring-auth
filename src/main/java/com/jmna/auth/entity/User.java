@@ -44,7 +44,7 @@ public class User {
     private RefreshToken refreshToken;
 
     @Builder
-    public User(String username, String password, String provider,List<Roles> roles) {
+    public User(String username, String password, String provider, List<Roles> roles) {
         this.username = username;
         this.password = password;
         this.provider = provider;

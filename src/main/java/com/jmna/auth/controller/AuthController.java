@@ -3,9 +3,11 @@ package com.jmna.auth.controller;
 import com.jmna.auth.dto.*;
 import com.jmna.auth.service.TokenService;
 import com.jmna.auth.service.UserService;
+import com.jmna.auth.userdetails.CustomUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -28,8 +30,8 @@ public class AuthController {
 
     // 로그아웃
     @GetMapping("/logout")
-    public CommonResponse logout(HttpServletRequest request) {
-        userService.logoutUser(request);
+    public CommonResponse logout(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        userService.logoutUser(userDetails);
         return CommonResponse.builder()
                 .message("로그아웃 성공")
                 .build();
@@ -37,8 +39,8 @@ public class AuthController {
 
     // 회원 탈퇴
     @DeleteMapping("/user")
-    public CommonResponse deleteUser(HttpServletRequest request, @RequestBody PasswordCheckRequest dto) {
-        userService.deleteUser(request, dto);
+    public CommonResponse deleteUser(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody PasswordCheckRequest dto) {
+        userService.deleteUser(userDetails, dto);
         return CommonResponse.builder()
                 .message("회원 탈퇴 성공")
                 .build();
@@ -55,8 +57,8 @@ public class AuthController {
 
     // 비밀 번호 변경
     @PatchMapping("/user/credentials")
-    public CommonResponse updateCredentials(HttpServletRequest request, @RequestBody PasswordChangeRequest dto) {
-        userService.changePassword(request, dto);
+    public CommonResponse updateCredentials(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody PasswordChangeRequest dto) {
+        userService.changePassword(userDetails, dto);
         return CommonResponse.builder()
                 .message("비밀번호 변경 성공")
                 .build();
@@ -64,8 +66,8 @@ public class AuthController {
 
     // 회원 정보 변경
     @PatchMapping("/user")
-    public CommonResponse updateUser(HttpServletRequest request, @RequestBody InfoUpdateRequest dto) {
-        userService.changeUserInfo(request, dto);
+    public CommonResponse updateUser(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody InfoUpdateRequest dto) {
+        userService.changeUserInfo(userDetails, dto);
         return CommonResponse.builder()
                 .message("회원정보 변경 성공")
                 .build();
@@ -73,8 +75,8 @@ public class AuthController {
 
     // 비밀 번호 검증
     @PostMapping("/check")
-    public CommonResponse check(HttpServletRequest request, @RequestBody PasswordCheckRequest dto) {
-        Boolean matches = userService.checkPassword(request, dto);
+    public CommonResponse check(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody PasswordCheckRequest dto) {
+        Boolean matches = userService.checkPassword(userDetails, dto);
         return CommonResponse.builder()
                 .message("비밀번호 검증 결과: " + matches.toString())
                 .build();

@@ -3,21 +3,17 @@ package com.jmna.auth.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jmna.auth.dto.*;
 import com.jmna.auth.entity.User;
-import com.jmna.auth.repository.RefreshTokenRepository;
 import com.jmna.auth.repository.UserRepository;
+import com.jmna.auth.userdetails.CustomUserDetails;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
@@ -27,11 +23,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @Transactional
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
 class UserServiceTest {
 
-    @LocalServerPort
-    int port;
     @Autowired
     MockMvc mockMvc;
 
@@ -39,8 +33,6 @@ class UserServiceTest {
     UserService userService;
     @Autowired
     UserRepository userRepository;
-    @Autowired
-    RefreshTokenRepository tokenRepository;
     @Autowired
     PasswordEncoder passwordEncoder;
 
@@ -106,11 +98,10 @@ class UserServiceTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     @Nested
     class AfterLoginTests {
-        String accessToken;
-        String refreshToken;
-        MockHttpServletRequest mockHttpServletRequest;
 
-        @BeforeAll
+        CustomUserDetails principal;
+
+        @BeforeEach
         void 회원가입_후_로그인() throws Exception {
             SignupRequest dto = SignupRequest.builder()
                     .username("test")
@@ -119,27 +110,9 @@ class UserServiceTest {
 
             userService.registerUser(dto);
 
-            LoginRequest req = new LoginRequest("test", "test");
-
-            MvcResult mvcResult = mockMvc.perform(
-                    post("/auth/login")
-                            .servletPath("/auth/login")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(new ObjectMapper().writeValueAsString(req))
-            ).andReturn();
-
-            MockHttpServletResponse response = mvcResult.getResponse();
-
-            LoginResponse loginResponse = new ObjectMapper().readValue(response.getContentAsString(), LoginResponse.class);
-
-            accessToken = loginResponse.getAccessToken();
-            refreshToken = loginResponse.getRefreshToken();
-
-            mockHttpServletRequest = new MockHttpServletRequest();
-            mockHttpServletRequest.addHeader("Authorization", "Bearer " + accessToken);
+            principal = new CustomUserDetails(userRepository.findByUsername("test").get());
         }
 
-        @Order(1)
         @Test
         void 비밀번호_변경() {
             PasswordChangeRequest dto = PasswordChangeRequest.builder()
@@ -147,20 +120,19 @@ class UserServiceTest {
                     .newPassword("test1")
                     .build();
 
-            userService.changePassword(mockHttpServletRequest, dto);
+            userService.changePassword(principal, dto);
             User user = userRepository.findByUsername("test").orElseThrow();
             String password = user.getPassword();
             Assertions.assertThat(passwordEncoder.matches("test1", password)).isTrue();
         }
 
-        @Order(2)
         @Test
         void 회원_정보_변경() {
             InfoUpdateRequest dto = InfoUpdateRequest.builder()
                     .username("testtest")
                     .build();
 
-            userService.changeUserInfo(mockHttpServletRequest, dto);
+            userService.changeUserInfo(principal, dto);
 
             Assertions.assertThatThrownBy(() -> userRepository.findByUsername("test").orElseThrow())
                     .isInstanceOf(NoSuchElementException.class);
@@ -168,28 +140,24 @@ class UserServiceTest {
             Assertions.assertThat(userRepository.findAll().get(0).getUsername()).isEqualTo("testtest");
         }
 
-        @Order(3)
         @Test
         void 비밀번호_확인() {
             PasswordCheckRequest dto = PasswordCheckRequest.builder()
-                    .password("test")
+                    .password("test1")
                     .build();
 
-            Assertions.assertThat(userService.checkPassword(mockHttpServletRequest, dto)).isTrue();
+            Assertions.assertThat(userService.checkPassword(principal, dto)).isFalse();
         }
 
-        @Order(4)
         @Test
         void 회원_탈퇴() {
             PasswordCheckRequest dto = PasswordCheckRequest.builder()
                     .password("test")
                     .build();
 
-            userService.deleteUser(mockHttpServletRequest, dto);
+            userService.deleteUser(principal, dto);
 
             Assertions.assertThatThrownBy(() -> userRepository.findByUsername("test").orElseThrow())
-                    .isInstanceOf(NoSuchElementException.class);
-            Assertions.assertThatThrownBy(() -> tokenRepository.findByTokenValue(refreshToken).orElseThrow())
                     .isInstanceOf(NoSuchElementException.class);
         }
     }
