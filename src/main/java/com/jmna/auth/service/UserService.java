@@ -9,16 +9,17 @@ import com.jmna.auth.exception.InvalidUsernameException;
 import com.jmna.auth.jwt.JwtTokenProvider;
 import com.jmna.auth.oauth.CustomOAuth2User;
 import com.jmna.auth.repository.UserRepository;
-import com.jmna.auth.userdetails.CustomUserDetails;
-import jakarta.servlet.http.HttpServletRequest;
+import com.jmna.auth.userdetails.SecurityUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -52,8 +53,8 @@ public class UserService {
         log.info("회원가입 성공, 사용자명: {}", dto.getUsername());
     }
 
-    public void deleteUser(CustomUserDetails userDetails, PasswordCheckRequest dto) {
-        User user = userDetails.getUser();
+    public void deleteUser(PasswordCheckRequest dto) throws AccessDeniedException {
+        User user = SecurityUtils.getCurrentUser();
         if (passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             userRepository.delete(user);
             log.info("회원탈퇴 성공, 사용자명: {}", user.getUsername());
@@ -63,8 +64,8 @@ public class UserService {
         }
     }
 
-    public void changePassword(CustomUserDetails userDetails, PasswordChangeRequest dto) {
-        User user = userDetails.getUser();
+    public void changePassword(PasswordChangeRequest dto) throws AccessDeniedException {
+        User user = SecurityUtils.getCurrentUser();
         if (passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
             user.updatePassword(passwordEncoder.encode(dto.getNewPassword()));
             userRepository.save(user);
@@ -75,8 +76,8 @@ public class UserService {
         }
     }
 
-    public void changeUserInfo(CustomUserDetails userDetails, InfoUpdateRequest dto) {
-        User user = userDetails.getUser();
+    public void changeUserInfo(InfoUpdateRequest dto) throws AccessDeniedException {
+        User user = SecurityUtils.getCurrentUser();
         if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
             log.error("사용자 정보 변경 오류: 동일한 사용자명이 이미 존재합니다.");
             throw new InvalidUsernameException();
@@ -86,8 +87,8 @@ public class UserService {
         log.info("사용자 정보 변경 성공: {}", user.getUsername());
     }
 
-    public Boolean checkPassword(CustomUserDetails userDetails, PasswordCheckRequest dto) {
-        User user = userDetails.getUser();
+    public Boolean checkPassword(PasswordCheckRequest dto) throws AccessDeniedException {
+        User user = SecurityUtils.getCurrentUser();
         return passwordEncoder.matches(dto.getPassword(), user.getPassword());
     }
 
@@ -135,8 +136,8 @@ public class UserService {
         }
     }
 
-    public void logoutUser(CustomUserDetails userDetails) {
-        User user = userDetails.getUser();
+    public void logoutUser() throws AccessDeniedException {
+        User user = SecurityUtils.getCurrentUser();
         tokenService.deleteUserToken(user);
         log.info("로그아웃 성공: {}", user.getUsername());
     }

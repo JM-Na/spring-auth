@@ -1,6 +1,5 @@
 package com.jmna.auth.exception;
 
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -8,12 +7,14 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.nio.file.AccessDeniedException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     // Body에 값이 적절하지 않거나 존재하지 않는 경우.
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<?> handleInvalidRequestBody(HttpMessageNotReadableException exception){
+    public ResponseEntity<?> handleInvalidRequestBody(HttpMessageNotReadableException exception) {
         return ResponseEntity
                 .badRequest()
                 .body("Invalid or missing request body");
@@ -38,5 +39,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body("동일한 사용자명이 이미 존재합니다.");
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<?> handleAccessDenied() {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("인증되지 않은 사용자입니다.");
     }
 }

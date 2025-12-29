@@ -11,11 +11,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.AccessDeniedException;
 import java.util.NoSuchElementException;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -111,28 +115,33 @@ class UserServiceTest {
             userService.registerUser(dto);
 
             principal = new CustomUserDetails(userRepository.findByUsername("test").get());
+
+            Authentication authentication =
+                    new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
         @Test
-        void 비밀번호_변경() {
+        void 비밀번호_변경() throws AccessDeniedException {
             PasswordChangeRequest dto = PasswordChangeRequest.builder()
                     .currentPassword("test")
                     .newPassword("test1")
                     .build();
 
-            userService.changePassword(principal, dto);
+            userService.changePassword(dto);
             User user = userRepository.findByUsername("test").orElseThrow();
             String password = user.getPassword();
             Assertions.assertThat(passwordEncoder.matches("test1", password)).isTrue();
         }
 
         @Test
-        void 회원_정보_변경() {
+        void 회원_정보_변경() throws AccessDeniedException {
             InfoUpdateRequest dto = InfoUpdateRequest.builder()
                     .username("testtest")
                     .build();
 
-            userService.changeUserInfo(principal, dto);
+            userService.changeUserInfo(dto);
 
             Assertions.assertThatThrownBy(() -> userRepository.findByUsername("test").orElseThrow())
                     .isInstanceOf(NoSuchElementException.class);
@@ -141,21 +150,21 @@ class UserServiceTest {
         }
 
         @Test
-        void 비밀번호_확인() {
+        void 비밀번호_확인() throws AccessDeniedException {
             PasswordCheckRequest dto = PasswordCheckRequest.builder()
                     .password("test1")
                     .build();
 
-            Assertions.assertThat(userService.checkPassword(principal, dto)).isFalse();
+            Assertions.assertThat(userService.checkPassword(dto)).isFalse();
         }
 
         @Test
-        void 회원_탈퇴() {
+        void 회원_탈퇴() throws AccessDeniedException {
             PasswordCheckRequest dto = PasswordCheckRequest.builder()
                     .password("test")
                     .build();
 
-            userService.deleteUser(principal, dto);
+            userService.deleteUser(dto);
 
             Assertions.assertThatThrownBy(() -> userRepository.findByUsername("test").orElseThrow())
                     .isInstanceOf(NoSuchElementException.class);
