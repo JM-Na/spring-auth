@@ -125,6 +125,7 @@ class UserServiceTest {
         @Test
         void 비밀번호_변경() throws AccessDeniedException {
             PasswordChangeRequest dto = PasswordChangeRequest.builder()
+                    .username("test")
                     .currentPassword("test")
                     .newPassword("test1")
                     .build();
@@ -152,6 +153,7 @@ class UserServiceTest {
         @Test
         void 비밀번호_확인() throws AccessDeniedException {
             PasswordCheckRequest dto = PasswordCheckRequest.builder()
+                    .username("test")
                     .password("test1")
                     .build();
 
@@ -161,6 +163,7 @@ class UserServiceTest {
         @Test
         void 회원_탈퇴() throws AccessDeniedException {
             PasswordCheckRequest dto = PasswordCheckRequest.builder()
+                    .username("test")
                     .password("test")
                     .build();
 

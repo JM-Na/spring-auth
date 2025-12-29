@@ -53,6 +53,7 @@ public class UserService {
         log.info("회원가입 성공, 사용자명: {}", dto.getUsername());
     }
 
+    @PreAuthorize("#dto.username == principal.user.username")
     public void deleteUser(PasswordCheckRequest dto) throws AccessDeniedException {
         User user = SecurityUtils.getCurrentUser();
         if (passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
@@ -64,6 +65,7 @@ public class UserService {
         }
     }
 
+    @PreAuthorize("#dto.username == principal.user.username")
     public void changePassword(PasswordChangeRequest dto) throws AccessDeniedException {
         User user = SecurityUtils.getCurrentUser();
         if (passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
@@ -76,6 +78,7 @@ public class UserService {
         }
     }
 
+    @PreAuthorize("#dto.username == principal.user.username")
     public void changeUserInfo(InfoUpdateRequest dto) throws AccessDeniedException {
         User user = SecurityUtils.getCurrentUser();
         if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
@@ -87,6 +90,7 @@ public class UserService {
         log.info("사용자 정보 변경 성공: {}", user.getUsername());
     }
 
+    @PreAuthorize("#dto.username == principal.user.username")
     public Boolean checkPassword(PasswordCheckRequest dto) throws AccessDeniedException {
         User user = SecurityUtils.getCurrentUser();
         return passwordEncoder.matches(dto.getPassword(), user.getPassword());
@@ -136,7 +140,8 @@ public class UserService {
         }
     }
 
-    public void logoutUser() throws AccessDeniedException {
+    @PreAuthorize("#dto.username == principal.user.username")
+    public void logoutUser(LogoutRequest dto) throws AccessDeniedException {
         User user = SecurityUtils.getCurrentUser();
         tokenService.deleteUserToken(user);
         log.info("로그아웃 성공: {}", user.getUsername());

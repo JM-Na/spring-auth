@@ -29,9 +29,9 @@ public class AuthController {
     }
 
     // 로그아웃
-    @GetMapping("/logout")
-    public CommonResponse logout() throws AccessDeniedException {
-        userService.logoutUser();
+    @PostMapping("/logout")
+    public CommonResponse logout(@RequestBody LogoutRequest dto) throws AccessDeniedException {
+        userService.logoutUser(dto);
         return CommonResponse.builder()
                 .message("로그아웃 성공")
                 .build();
