@@ -7,4 +7,5 @@ import lombok.Getter;
 @Builder
 public class InfoUpdateRequest {
     private String username;
+    private String newName;
 }
