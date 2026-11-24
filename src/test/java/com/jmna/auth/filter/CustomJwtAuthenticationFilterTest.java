@@ -94,15 +94,17 @@ class CustomJwtAuthenticationFilterTest {
     @Test
     void JWT_인증_성공() throws Exception {
         // 테스트 유저 회원 가입
+        String username = "jwt-auth-access";
+
         SignupRequest dto = SignupRequest.builder()
-                .username("test")
+                .username(username)
                 .password("test")
                 .build();
 
         userService.registerUser(dto);
         
         // 테스트 유저 로그인 후 토큰 생성
-        LoginRequest req = new LoginRequest("test","test");
+        LoginRequest req = new LoginRequest(username,"test");
 
         MvcResult mvcResult = mockMvc.perform(
                 post("/auth/login")

@@ -26,23 +26,11 @@ import java.io.IOException;
 @ExtendWith(MockitoExtension.class)
 class CustomLoginAuthenticationFilterTest {
 
-    @Autowired
-    UserService userService;
 
     CustomLoginAuthenticationFilter loginFilter;
     MockHttpServletRequest mockRequest;
     MockHttpServletResponse mockResponse;
     MockFilterChain mockFilterChain;
-
-    @BeforeAll
-    void beforeAll() {
-        SignupRequest dto = SignupRequest.builder()
-                .username("test")
-                .password("test")
-                .build();
-
-        userService.registerUser(dto);
-    }
 
     @BeforeEach
     void beforeEach() {
