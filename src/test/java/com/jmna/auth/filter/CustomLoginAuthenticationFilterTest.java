@@ -2,15 +2,12 @@ package com.jmna.auth.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jmna.auth.dto.LoginRequest;
-import com.jmna.auth.dto.SignupRequest;
-import com.jmna.auth.service.UserService;
 import jakarta.servlet.ServletException;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockFilterChain;
@@ -26,23 +23,11 @@ import java.io.IOException;
 @ExtendWith(MockitoExtension.class)
 class CustomLoginAuthenticationFilterTest {
 
-    @Autowired
-    UserService userService;
 
     CustomLoginAuthenticationFilter loginFilter;
     MockHttpServletRequest mockRequest;
     MockHttpServletResponse mockResponse;
     MockFilterChain mockFilterChain;
-
-    @BeforeAll
-    void beforeAll() {
-        SignupRequest dto = SignupRequest.builder()
-                .username("test")
-                .password("test")
-                .build();
-
-        userService.registerUser(dto);
-    }
 
     @BeforeEach
     void beforeEach() {
