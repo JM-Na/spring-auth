@@ -80,8 +80,13 @@ public class UserService {
 
     @PreAuthorize("#dto.username == principal.user.username")
     public void changeUserInfo(InfoUpdateRequest dto) throws AccessDeniedException {
+        if (dto.getNewName() == null || dto.getNewName().trim().isEmpty()) {
+            log.error("사용자 정보 변경 오류: 새 사용자명이 유효하지 않습니다.");
+            throw new InvalidUsernameException();
+        }
+
         User user = SecurityUtils.getCurrentUser();
-        if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
+        if (userRepository.findByUsername(dto.getNewName()).isPresent()) {
             log.error("사용자 정보 변경 오류: 동일한 사용자명이 이미 존재합니다.");
             throw new InvalidUsernameException();
         }

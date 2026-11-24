@@ -61,7 +61,7 @@ public class User {
     }
 
     public void updateDetails(InfoUpdateRequest dto) {
-        this.username = dto.getUsername();
+        this.username = dto.getNewName();
     }
 
 
