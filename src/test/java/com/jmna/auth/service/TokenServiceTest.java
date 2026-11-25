@@ -205,6 +205,27 @@ class TokenServiceTest {
         Assertions.assertThatThrownBy(() -> tokenProvider.getUserId(token))
                 .isInstanceOf(InvalidJWTException.class);
     }
+    @Test
+    void legacyTokenWithoutSubInfo() {
+        // 2. 기존 사용자명 형식 토큰은 회원 ID를 읽는 단계에서 거부되는지 별도 테스트로 확인한다.
+        Instant issuedAt = Instant.now();
+        Instant expiresAt = issuedAt.plus(15, ChronoUnit.MINUTES);
+
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer("jmna-auth-server")
+                .issuedAt(issuedAt)
+                .expiresAt(expiresAt)
+                .subject("123")
+                .claim("type", "access")
+                .build();
+
+        String token = jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+
+        Jwt jwt = tokenProvider.decode(token);
+
+        Assertions.assertThatThrownBy(() -> tokenProvider.getUserId(token))
+                .isInstanceOf(InvalidJWTException.class);
+    }
 
     @Test
     void findUserRefreshToken() {
