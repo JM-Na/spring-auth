@@ -23,7 +23,10 @@ public class CustomOAuth2LoginSuccessHandler implements AuthenticationSuccessHan
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException {
-        CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
+        if (!(authentication.getPrincipal() instanceof CustomOAuth2User oAuth2User)) {
+            throw new IllegalStateException("로컬 로그인 principal 타입이 올바르지 않습니다.");
+        }
+
         userService.loginUser(oAuth2User, response);
     }
 }

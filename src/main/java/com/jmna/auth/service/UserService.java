@@ -7,6 +7,7 @@ import com.jmna.auth.entity.Roles;
 import com.jmna.auth.entity.User;
 import com.jmna.auth.exception.InvalidUsernameException;
 import com.jmna.auth.jwt.JwtTokenProvider;
+import com.jmna.auth.jwt.TokenType;
 import com.jmna.auth.oauth.CustomOAuth2User;
 import com.jmna.auth.repository.UserRepository;
 import com.jmna.auth.userdetails.SecurityUtils;
@@ -23,6 +24,7 @@ import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -102,12 +104,12 @@ public class UserService {
     }
 
     // 일반 유저 로그인 처리
-    public void loginUser(String username, HttpServletResponse response) throws IOException {
+    public void loginUser(Long userId, HttpServletResponse response) throws IOException {
         // JWT 생성
-        String accessToken = tokenProvider.generateAccessToken(username);
-        String refreshToken = tokenProvider.generateRefreshToken(username);
+        String accessToken = tokenProvider.generateToken(userId, TokenType.ACCESS);
+        String refreshToken = tokenProvider.generateToken(userId, TokenType.REFRESH);
 
-        User user = userRepository.findByUsername(username).orElseThrow();
+        User user = userRepository.findById(userId).orElseThrow();
 
         saveUserAndToken(refreshToken, user);
 
@@ -121,28 +123,33 @@ public class UserService {
         String provider = oAuth2User.getProvider();
 
         // JWT 생성
-        String accessToken = tokenProvider.generateAccessToken(username);
-        String refreshToken = tokenProvider.generateRefreshToken(username);
 
-        try {
-            User user = userRepository.findByUsername(username).orElseThrow();
-            saveUserAndToken(refreshToken, user);
 
-            setLoginResponse(response, "로그인에 성공했습니다.", accessToken, refreshToken, provider);
-        } catch (NoSuchElementException e) {
-            log.info("{}: 해당 유저가 DB 내에 존재하지 않습니다.", e.getMessage());
+        Optional<User> userOptional = userRepository.findByUsername(username);
 
-            User user = User.builder()
-                    .username(username)
-                    .password(null)
-                    .provider(provider)
-                    .roles(List.of(Roles.ROLE_USER))
-                    .build();
+        String msg = userOptional.isPresent()
+                ? "로그인에 성공했습니다."
+                : "회원가입 및 로그인에 성공했습니다.";
 
-            saveUserAndToken(refreshToken, user);
+        User user = userOptional.orElseGet( () -> {
+                    User newUser = User.builder()
+                            .username(username)
+                            .password(null)
+                            .provider(provider)
+                            .roles(List.of(Roles.ROLE_USER))
+                            .build();
+                    return userRepository.save(newUser);
+                }
+        );
 
-            setLoginResponse(response, "회원가입 및 로그인에 성공했습니다.", accessToken, refreshToken, provider);
-        }
+        Long userId = user.getId();
+
+        String accessToken = tokenProvider.generateToken(userId, TokenType.ACCESS);
+        String refreshToken = tokenProvider.generateToken(userId, TokenType.REFRESH);
+
+        saveUserAndToken(refreshToken, user);
+
+        setLoginResponse(response, msg, accessToken, refreshToken, provider);
     }
 
     @PreAuthorize("#dto.username == principal.user.username")
