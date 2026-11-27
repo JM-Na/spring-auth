@@ -10,6 +10,7 @@ public enum CustomOAuth2Provider {
         public ClientRegistration.Builder getBuilder(String registrationId) {
             ClientRegistration.Builder builder = baseBuilder(registrationId);
             return builder
+                    // TODO(#8): 5-3. 카카오 콘솔의 이메일 동의항목을 확인하고 account_email 스코프를 요청한다.
                     .scope("profile_nickname")
                     .authorizationUri("https://kauth.kakao.com/oauth/authorize")
                     .tokenUri("https://kauth.kakao.com/oauth/token")

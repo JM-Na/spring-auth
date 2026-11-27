@@ -1,0 +1,67 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  config:
+    import: optional:file:./config/secret.properties
+  # Default database for local practice. H2 uses a separate in-memory database per context.
+  datasource:
+    url: jdbc:h2:mem:spring_auth_${random.uuid}
+    username: ${H2_USERNAME:sa}
+    password: ${H2_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  data:
+    redis:
+      # The application pings Redis on startup.
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+
+expire:
+  access: ${JWT_ACCESS_EXPIRE_MINUTES:15}
+  refresh: ${JWT_REFRESH_EXPIRE_DAYS:7}
+  key: ${JWT_SECRET}
+mail:
+  host: ${SMTP_HOST}
+  port: ${SMTP_PORT:587}
+  username: ${SMTP_USERNAME}
+  password: ${SMTP_PASSWORD}
+  properties:
+    "[mail.smtp.auth]": true
+    "[mail.smtp.starttls.enable]": true
+    "[mail.smtp.starttls.required]": true
+
+# Set both credentials in config/secret.properties or the environment to use a provider.
+oauth:
+  kakao:
+    client-id: ${KAKAO_CLIENT_ID:dummy}
+    client-secret: ${KAKAO_CLIENT_SECRET:dummy}
+  naver:
+    client-id: ${NAVER_CLIENT_ID:dummy}
+    client-secret: ${NAVER_CLIENT_SECRET:dummy}
+  github:
+    client-id: ${GITHUB_CLIENT_ID:dummy}
+    client-secret: ${GITHUB_CLIENT_SECRET:dummy}
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:dummy}
+    client-secret: ${GOOGLE_CLIENT_SECRET:dummy}
+
+---
+# Set SPRING_PROFILES_ACTIVE=mysql to use MySQL.
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/spring_auth}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      # Use update to create tables in a local practice database.
+      ddl-auto: ${DB_DDL_AUTO:validate}
+
+email:
+  key: ${EMAIL_SECRET}
+  algorithm: ${EMAIL_ALGORITHM:HmacSHA256}

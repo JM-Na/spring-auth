@@ -43,6 +43,8 @@ class UserServiceTest {
     PasswordEncoder passwordEncoder;
 
 
+    // TODO(#8): 6. 서버에서 이메일 확인값을 준비해 일반 가입을 검증한다.
+    // 확인값 만료·재사용·다른 이메일 사용과 이미 등록된 이메일로 가입하는 경우를 각각 확인한다.
     @Test
     void 회원가입_성공() {
         SignupRequest dto = SignupRequest.builder()

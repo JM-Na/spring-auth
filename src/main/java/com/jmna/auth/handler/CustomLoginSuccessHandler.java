@@ -1,6 +1,8 @@
 package com.jmna.auth.handler;
 
+import com.jmna.auth.entity.User;
 import com.jmna.auth.service.UserService;
+import com.jmna.auth.userdetails.CustomUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +24,11 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
 
         String username = authentication.getName();
 
+        if (!(authentication.getPrincipal() instanceof CustomUserDetails principal)) {
+            throw new IllegalStateException("로컬 로그인 principal 타입이 올바르지 않습니다.");
+        }
+
         // 유저를 로그인 처리할 시, Access Token, Refresh Token을 생성하고 저장
-        userService.loginUser(username, response);
+        userService.loginUser(principal.getUser().getId(), response);
     }
 }

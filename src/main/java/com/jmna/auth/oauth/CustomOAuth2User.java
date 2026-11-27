@@ -12,13 +12,17 @@ import java.util.Map;
 public class CustomOAuth2User extends DefaultOAuth2User {
 
     private String username;
-    private String provider;
+    private String registrationId;
+    private String providerId;
+    // TODO(#8): 5-3. 공급자에서 읽은 이메일과 검증 여부를 일반 OAuth2와 OIDC에서 같은 형태로 넘긴다.
 
-    public CustomOAuth2User(OAuth2User oAuth2User, String provider, String nameAttributeKey) {
+    public CustomOAuth2User(OAuth2User oAuth2User, String registrationId, String nameAttributeKey, String providerId) {
         super(oAuth2User.getAuthorities(), oAuth2User.getAttributes(), nameAttributeKey);
         this.username = oAuth2User.getName();
+        // 이메일을 다루기 전에 공급자 속성 전체를 출력하는 이 로그를 정리한다.
         System.out.println("oAuth2User = " + oAuth2User);
-        this.provider = provider;
+        this.registrationId = registrationId;
+        this.providerId = providerId;
     }
 
     @Override

@@ -11,5 +11,5 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 public class CommonLoginResponse extends CommonRefreshResponse {
     private String refreshToken;
-    private String provider;
+    private String registrationId;
 }

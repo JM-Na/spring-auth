@@ -4,6 +4,7 @@ import com.jmna.auth.dto.*;
 import com.jmna.auth.service.TokenService;
 import com.jmna.auth.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,20 @@ public class AuthController {
     private final UserService userService;
     private final TokenService tokenService;
 
-    // 회원가입
+    // TODO(#8): 5-1.1. email을 EmailService에 넘기고, 응답에는 서비스가 반환한 challengeId를 담는다.
+    @PostMapping("/signup/email/send")
+    public void sendEmail(@Valid @RequestBody SendEmailRequest dto) {
+
+    }
+    // TODO(#8): 5-1.2. challengeId와 verifyCode를 EmailService의 확인 메서드에 넘긴다.
+    // 코드 비교가 끝난 뒤 이어지는 단계에서 emailVerificationId 응답을 연결한다.
+    // 두 POST 경로는 가입 전 호출하므로 WebSecurityConfig와 JWT 필터의 경로를 함께 확인한다.
+    @PostMapping("/signup/email/verify")
+    public void verifyEmailCode(@Valid @RequestBody EmailCodeVerifyRequest dto){
+
+    }
+
+    // TODO(#8): 5-1.3. 기존 POST /auth/signup에서 email과 emailVerificationId가 담긴 SignupRequest를 가입 서비스에 넘긴다.
     @PostMapping("/signup")
     public CommonResponse signup(@RequestBody SignupRequest dto) {
         userService.registerUser(dto);
@@ -27,6 +41,9 @@ public class AuthController {
                 .message("회원가입 성공")
                 .build();
     }
+
+    // TODO(#8): 5-5. 이메일 확인이나 기존 계정 인증을 마친 뒤 소셜 로그인 대기 요청을 이어가는 경로를 잡는다.
+    // requestId로 대기 요청을 확인하고, 기존 계정 연동에서는 인증된 principal의 내부 회원 ID를 서비스에 넘긴다.
 
     // 로그아웃
     @PostMapping("/logout")

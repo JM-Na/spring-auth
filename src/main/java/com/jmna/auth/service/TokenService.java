@@ -4,11 +4,13 @@ import com.jmna.auth.entity.RefreshToken;
 import com.jmna.auth.entity.User;
 import com.jmna.auth.exception.InvalidJWTException;
 import com.jmna.auth.jwt.JwtTokenProvider;
+import com.jmna.auth.jwt.TokenType;
 import com.jmna.auth.repository.RefreshTokenRepository;
 import com.jmna.auth.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -19,24 +21,31 @@ public class TokenService {
     private final RefreshTokenRepository tokenRepository;
     private final JwtTokenProvider tokenProvider;
 
-    // 유저 이름으로 토큰 검색
-    public RefreshToken findUserRefreshToken(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow();
-        return user.getRefreshToken();
+    public RefreshToken findUserRefreshToken(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(
+                InvalidJWTException::new
+        );
+
+        RefreshToken refreshToken = user.getRefreshToken();
+
+        if (refreshToken == null)
+            throw new InvalidJWTException();
+
+        return refreshToken;
     }
 
     // RefreshToken 검증
     public Boolean verifyRefreshToken(String tokenValue) {
-        String username = tokenProvider.getUsername(tokenValue);
-        RefreshToken refreshToken = findUserRefreshToken(username);
+        Long userId = tokenProvider.getUserId(tokenValue);
+        RefreshToken refreshToken = findUserRefreshToken(userId);
         return refreshToken.getTokenValue().equals(tokenValue);
     }
 
-    public String getTokenUsername(HttpServletRequest request) {
+    public Long getTokenUserId(HttpServletRequest request) {
         String authorization = request.getHeader("Authorization");
         if (authorization != null && authorization.startsWith("Bearer ")) {
             String jwt = authorization.substring(7);
-            return tokenProvider.getUsername(jwt);
+            return tokenProvider.getUserId(jwt);
         } else {
             log.error("JWT 정보 추출 실패: Authorization 헤더가 존재하지 않거나 그 값의 형식이 잘못되었습니다.");
             throw new InvalidJWTException();
@@ -56,17 +65,16 @@ public class TokenService {
     public String refreshAccessToken(HttpServletRequest request) {
         String authorization = request.getHeader("Authorization");
         if (authorization != null && authorization.startsWith("Bearer ")) {
-            String jwt = authorization.substring(7);
-            String username = tokenProvider.getUsername(jwt);
-            if (verifyRefreshToken(jwt)) {
-                log.info("Refresh Token 검증 성공, 사용자명: {}", username);
-                return tokenProvider.generateAccessToken(username);
+            String givenRefreshToken = authorization.substring(7);
+            Long userId = tokenProvider.getUserId(givenRefreshToken);
+            if (verifyRefreshToken(givenRefreshToken)) {
+                log.info("Refresh Token 검증 성공, 사용자명: {}", userId);
+                return tokenProvider.generateToken(userId, TokenType.ACCESS);
             } else {
-                log.error("Refresh Token 검증 실패, 사용자명: {}", username);
+                log.error("Refresh Token 검증 실패, 사용자명: {}", userId);
                 throw new InvalidJWTException();
             }
-        }
-        else {
+        } else {
             log.error("Refresh Token 검증 실패: Authorization 헤더가 존재하지 않거나 그 값의 형식이 잘못되었습니다.");
             throw new InvalidJWTException();
         }

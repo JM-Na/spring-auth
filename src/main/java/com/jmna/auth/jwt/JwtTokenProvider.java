@@ -7,10 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Component;
 
+import javax.naming.directory.InvalidAttributesException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
@@ -30,31 +30,23 @@ public class JwtTokenProvider {
     private Long REFRESH_TOKEN_EXPIRE_DAY;
 
 
-    // Access Token 생성
-    public String generateAccessToken(String username) {
-        Instant now = Instant.now();
+    // Token 생성
+    public String generateToken(Long userId, TokenType type) {
+        Instant issuedAt = Instant.now();
+        Instant expiresAt = issuedAt;
+
+        switch (type) {
+            case TokenType.ACCESS -> expiresAt = expiresAt.plus(ACCESS_TOKEN_EXPIRE_MIN, ChronoUnit.MINUTES);
+            case TokenType.REFRESH -> expiresAt = expiresAt.plus(REFRESH_TOKEN_EXPIRE_DAY, ChronoUnit.DAYS);
+        }
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("jmna-auth-server")
-                .issuedAt(now)
-                .expiresAt(now.plus(ACCESS_TOKEN_EXPIRE_MIN, ChronoUnit.MINUTES))
-                .subject(username)
-                .claim("type", "access")
-                .build();
-
-        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
-    }
-
-    // Refresh Token 생성
-    public String generateRefreshToken(String username) {
-        Instant now = Instant.now();
-
-        JwtClaimsSet claims = JwtClaimsSet.builder()
-                .issuer("jmna-auth-server")
-                .issuedAt(now)
-                .expiresAt(now.plus(REFRESH_TOKEN_EXPIRE_DAY, ChronoUnit.DAYS))
-                .subject(username)
-                .claim("type", "refresh")
+                .issuedAt(issuedAt)
+                .expiresAt(expiresAt)
+                .subject(String.valueOf(userId))
+                .claim("type", type.claimValue())
+                .claim("subInfo", "userId")
                 .build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
@@ -65,10 +57,23 @@ public class JwtTokenProvider {
         return jwtDecoder.decode(token);
     }
 
-    // 토론에서 username 추출
-    public String getUsername(String token) {
-        return jwtDecoder.decode(token).getSubject();
+    public Long getUserId(String token) {
+        try {
+            Jwt jwt = jwtDecoder.decode(token);
+
+            Object subInfo = jwt.getClaim("subInfo");
+
+            if ("userId".equals(subInfo)) {
+                return Long.valueOf(jwt.getSubject());
+            } else {
+                throw new InvalidJWTException();
+            }
+        } catch (JwtException | NumberFormatException e) {
+            throw new InvalidJWTException();
+        }
+
     }
+
 
     // claim 꺼내기
     public Map<String, Object> getClaims(String token) {
@@ -82,7 +87,7 @@ public class JwtTokenProvider {
             Jwt jwt = decode(token);
             String type = jwt.getClaim("type");
             // 2. 토큰 타입 확인
-            if (!type.equals("access"))
+            if (!type.equals(TokenType.ACCESS.claimValue()))
                 return false;
         } catch (JwtException e) {
             throw new InvalidJWTException();
@@ -91,8 +96,8 @@ public class JwtTokenProvider {
     }
 
     public Authentication getAuthentication(String token) {
-        String username = getUsername(token);
-        CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(username);
+        Long userId = getUserId(token);
+        CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserById(userId);
         return new UsernamePasswordAuthenticationToken(
                 userDetails,
                 null,
